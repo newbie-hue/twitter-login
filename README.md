@@ -9,8 +9,16 @@ username = ...
 password = ...
 
 login = Login(username, password).run()
+```
 
-print(login.content)
-print(login.session.cookies.get_dict())
-    
+#### use authenticated session 
+```python
+queryId: str = ...
+operation: str = ...
+variables: dict = ...
+features: dict = ...
+
+r = login.session.get(f"https://api.twitter.com/graphql/{queryId}/{operation}?variables={variables}&features={features}")
+
+print(r.json())
 ```
