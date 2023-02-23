@@ -1,2 +1,3 @@
 # twitter-login
-twitter login module
+
+Component to automate Twitter login process. Returns authenticated session.
