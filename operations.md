@@ -1,28 +1,3 @@
-
-### adFreeArticleDomains
-
-#### queryId
-```
-zwTrX9CtnMvWlBXjsx95RQ
-```
-
-#### features
-```json
-{}
-```
-
-### articleNudgeDomains
-
-#### queryId
-```
-88Bu08U2ddaVVjKmmXjVYg
-```
-
-#### features
-```json
-{}
-```
-
 ### ArticleTimeline
 
 #### queryId
@@ -4503,4 +4478,27 @@ jqQV7d1CMJ4El2nGSit6aA
     "responsive_web_graphql_skip_user_profile_image_extensions_enabled": true,
     "responsive_web_graphql_timeline_navigation_enabled": true
 }
+```
+### adFreeArticleDomains
+
+#### queryId
+```
+zwTrX9CtnMvWlBXjsx95RQ
+```
+
+#### features
+```json
+{}
+```
+
+### articleNudgeDomains
+
+#### queryId
+```
+88Bu08U2ddaVVjKmmXjVYg
+```
+
+#### features
+```json
+{}
 ```
