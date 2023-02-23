@@ -2,7 +2,7 @@ Component to automate Twitter login process. Returns authenticated session.
 
 
 #### Example
-```
+```python
 from login import Login
 
 username = ...
