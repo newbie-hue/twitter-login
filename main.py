@@ -91,17 +91,3 @@ class Login:
             self.flow_duplication_check
         ]]
         return self
-
-
-def main():
-    username = ...
-    password = ...
-
-    login = Login(username, password).run()
-
-    print(login.content)
-    print(login.session.cookies.get_dict())
-
-
-if __name__ == '__main__':
-    main()
