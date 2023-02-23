@@ -1,4 +1,4 @@
-Component to automate Twitter login process. Returns authenticated session.
+Component to automate Twitter login process. Returns Login object containing authenticated session.
 
 
 #### Example
