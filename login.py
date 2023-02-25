@@ -1,93 +1,89 @@
-import enum
-import requests
+import sys
+from requests import Session
 
 
-class Token(enum.Enum):
-    GUEST = 'guest_token'
-    FLOW = 'flow_token'
+def update_token(session: Session, key: str, url: str, payload: dict) -> Session:
+    headers = {
+        "authorization": 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+        "content-type": "application/json",
+        "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36',
+        "x-guest-token": session.tokens['guest_token'],
+        "x-csrf-token": session.cookies.get("ct0"),
+        "x-twitter-auth-type": "OAuth2Session" if session.cookies.get("auth_token") else '',
+        "x-twitter-active-user": "yes",
+        "x-twitter-client-language": 'en',
+    }
+    r = session.post(url, headers=headers, json=payload).json()
+    status = f'\u001b[32mSUCCESS' if r.get('guest_token') or r.get('flow_token') else f'\u001b[31mFAILED'
+    print(f'{status}\u001b[0m {sys._getframe(1).f_code.co_name}')  # check response data
+    session.tokens[key] = r[key]
+    return session
 
 
-class Login:
-    def __init__(self, username: str, password: str):
-        self.session = requests.Session()
-        self.session.username = username
-        self.session.password = password
-        self.session.tokens = {Token.GUEST.value: None, Token.FLOW.value: None}
-        self.content = None
+def init_guest_token(session: Session) -> Session:
+    return update_token(session, 'guest_token', 'https://api.twitter.com/1.1/guest/activate.json', {})
 
-    def __get_headers(self) -> dict:
-        return {
-            "authorization": 'Bearer AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
-            "content-type": "application/json",
-            "user-agent": 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36 Vivaldi/4.3',
-            "x-guest-token": self.session.tokens[Token.GUEST.value],
-            "x-csrf-token": self.session.cookies.get("ct0"),
-            "x-twitter-auth-type": "OAuth2Session" if self.session.cookies.get("auth_token") else '',
-            "x-twitter-active-user": "yes",
-            "x-twitter-client-language": 'en',
-        }
 
-    def __update_token(self, key: str, url: str, payload: dict) -> dict:
-        r = self.session.post(url, headers=self.__get_headers(), json=payload).json()
-        self.session.tokens[key] = r[key]
-        return r
+def flow_start(session: Session) -> Session:
+    return update_token(session, 'flow_token', 'https://api.twitter.com/1.1/onboarding/task.json?flow_name=login', {
+        "input_flow_data": {
+            "flow_context": {"debug_overrides": {}, "start_location": {"location": "splash_screen"}}
+        }, "subtask_versions": {}
+    })
 
-    def init_guest_token(self):
-        self.__update_token(Token.GUEST.value, 'https://api.twitter.com/1.1/guest/activate.json', {})
 
-    def flow_start(self):
-        self.__update_token(Token.FLOW.value, 'https://api.twitter.com/1.1/onboarding/task.json?flow_name=login', {
-            "input_flow_data": {
-                "flow_context": {"debug_overrides": {}, "start_location": {"location": "splash_screen"}}
-            }, "subtask_versions": {}
-        })
+def flow_instrumentation(session: Session) -> Session:
+    return update_token(session, 'flow_token', 'https://api.twitter.com/1.1/onboarding/task.json', {
+        "flow_token": session.tokens['flow_token'],
+        "subtask_inputs": [{
+            "subtask_id": "LoginJsInstrumentationSubtask",
+            "js_instrumentation": {"response": "{}", "link": "next_link"}
+        }],
+    })
 
-    def flow_instrumentation(self):
-        self.__update_token(Token.FLOW.value, 'https://api.twitter.com/1.1/onboarding/task.json', {
-            "flow_token": self.session.tokens[Token.FLOW.value],
-            "subtask_inputs": [{
-                "subtask_id": "LoginJsInstrumentationSubtask",
-                "js_instrumentation": {"response": "{}", "link": "next_link"}
-            }],
-        })
 
-    def flow_username(self):
-        self.__update_token(Token.FLOW.value, 'https://api.twitter.com/1.1/onboarding/task.json', {
-            "flow_token": self.session.tokens[Token.FLOW.value],
-            "subtask_inputs": [{
-                "subtask_id": "LoginEnterUserIdentifierSSO",
-                "settings_list": {
-                    "setting_responses": [{
-                        "key": "user_identifier",
-                        "response_data": {"text_data": {"result": self.session.username}}
-                    }], "link": "next_link"}}],
-        })
+def flow_username(session: Session) -> Session:
+    return update_token(session, 'flow_token', 'https://api.twitter.com/1.1/onboarding/task.json', {
+        "flow_token": session.tokens['flow_token'],
+        "subtask_inputs": [{
+            "subtask_id": "LoginEnterUserIdentifierSSO",
+            "settings_list": {
+                "setting_responses": [{
+                    "key": "user_identifier",
+                    "response_data": {"text_data": {"result": session.username}}
+                }], "link": "next_link"}}],
+    })
 
-    def flow_password(self):
-        self.__update_token(Token.FLOW.value, 'https://api.twitter.com/1.1/onboarding/task.json', {
-            "flow_token": self.session.tokens[Token.FLOW.value],
-            "subtask_inputs": [{
-                "subtask_id": "LoginEnterPassword",
-                "enter_password": {"password": self.session.password, "link": "next_link"}}]
-        })
 
-    def flow_duplication_check(self):
-        r = self.__update_token(Token.FLOW.value, 'https://api.twitter.com/1.1/onboarding/task.json', {
-            "flow_token": self.session.tokens[Token.FLOW.value],
-            "subtask_inputs": [{
-                "subtask_id": "AccountDuplicationCheck",
-                "check_logged_in_account": {"link": "AccountDuplicationCheck_false"},
-            }],
-        })
-        self.content = r
+def flow_password(session: Session) -> Session:
+    return update_token(session, 'flow_token', 'https://api.twitter.com/1.1/onboarding/task.json', {
+        "flow_token": session.tokens['flow_token'],
+        "subtask_inputs": [{
+            "subtask_id": "LoginEnterPassword",
+            "enter_password": {"password": session.password, "link": "next_link"}}]
+    })
 
-    def run(self):
-        [fn() for fn in [
-            self.init_guest_token,
-            self.flow_start,
-            self.flow_instrumentation,
-            self.flow_username,
-            self.flow_password,
-            self.flow_duplication_check
-        ]]
-        return self
+
+def flow_duplication_check(session: Session) -> Session:
+    return update_token(session, 'flow_token', 'https://api.twitter.com/1.1/onboarding/task.json', {
+        "flow_token": session.tokens['flow_token'],
+        "subtask_inputs": [{
+            "subtask_id": "AccountDuplicationCheck",
+            "check_logged_in_account": {"link": "AccountDuplicationCheck_false"},
+        }],
+    })
+
+
+def execute_login_flow(session: Session) -> Session:
+    session = init_guest_token(session)
+    for fn in [flow_start, flow_instrumentation, flow_username, flow_password, flow_duplication_check]:
+        session = fn(session)
+    return session
+
+
+def login(username: str, password: str) -> Session:
+    session = Session()
+    session.username = username
+    session.password = password
+    session.tokens = {'guest_token': None, 'flow_token': None}
+    return execute_login_flow(session)
