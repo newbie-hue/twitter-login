@@ -15,7 +15,7 @@ def update_token(session: Session, key: str, url: str, payload: dict) -> Session
     }
     r = session.post(url, headers=headers, json=payload).json()
     status = f'\u001b[32mSUCCESS' if r.get('guest_token') or r.get('flow_token') else f'\u001b[31mFAILED'
-    print(f'{status}\u001b[0m {sys._getframe(1).f_code.co_name}')  # check response data
+    print(f'{status}\u001b[0m {sys._getframe(1).f_code.co_name}')  # check flow status
     session.tokens[key] = r[key]
     return session
 
