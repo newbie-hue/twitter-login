@@ -1,24 +1,26 @@
-Component to automate Twitter login process. Returns Login object containing authenticated session.
+Functions for automating Twitter processes
 
 
 #### Example
 ```python
-from login import Login
+from login import login
 
-username = ...
-password = ...
+session = login(username,password)
 
-login = Login(username, password).run()
+print(session.cookies.get_dict())
 ```
 
 #### Use authenticated session 
 ```python
-queryId: str = ...
-operation: str = ...
-variables: dict = ...
-features: dict = ...
+queryId:str = ...
+operation:str = ...
+variables:dict = ...
+features:dict = ...
 
-r = login.session.get(f"https://api.twitter.com/graphql/{queryId}/{operation}?variables={variables}&features={features}")
+headers:dict = ...
+
+url = f"https://api.twitter.com/graphql/{queryId}/{operation}?variables={variables}&features={features}"
+r = session.get(url,heaeders=headers)
 
 print(r.json())
 ```
