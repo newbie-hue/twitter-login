@@ -20,7 +20,7 @@ features:dict = ...
 headers:dict = ...
 
 url = f"https://api.twitter.com/graphql/{queryId}/{operation}?variables={variables}&features={features}"
-r = session.get(url,heaeders=headers)
+r = session.get(url,headers=headers)
 
 print(r.json())
 ```
