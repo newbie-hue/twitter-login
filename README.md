@@ -1,5 +1,6 @@
 Functions for automating Twitter processes
 
+Implemented in [Twitter API Client](https://github.com/trevorhobenshield/twitter-api-client)
 
 #### Example
 ```python
